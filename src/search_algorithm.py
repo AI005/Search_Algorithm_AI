@@ -160,7 +160,7 @@ def DFS(graph, edges, edge_id, start, goal):
 
             stack.pop()
 
-        pygame.time.delay(1000)
+        pygame.time.delay(time_delay)
         graphUI.updateUI()
         
         # set color node was visted
@@ -222,11 +222,20 @@ def UCS(graph, edges, edge_id, start, goal):
     graphUI.updateUI()
 
 
-
-def cost(graph, v_from, v_to):
+def heuristic(graph, v_from, v_to):
     x1, y1 = graph[v_from][0]
     x2, y2 = graph[v_to][0]
     return math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
+
+def cost(graph, v_from, v_to):
+    try:
+        if v_to not in graph[v_from][1]:
+            raise Exception('NotLinkedVertexs')
+
+        return heuristic(graph, v_from, v_to)
+
+    except Exception as error:
+        print(error)
 
 def AStar(graph, edges, edge_id, start, goal):
     openset = set()
@@ -245,7 +254,7 @@ def AStar(graph, edges, edge_id, start, goal):
     pygame.time.delay(time_delay)
 
     while len(openset) != 0:
-        current = min(openset, key=lambda a: G[a] + cost(graph, goal, a))
+        current = min(openset, key=lambda a: G[a] + heuristic(graph, goal, a))
         
         # fill color current vertex to yellow
         fill_vertex(graph, current, yellow)
@@ -313,7 +322,7 @@ def BeFS(graph, edges, edge_id, start, goal):
     pygame.time.delay(time_delay)
 
     while len(openset) != 0:
-        current = min(openset, key = lambda a: cost(graph, a, goal))
+        current = min(openset, key = lambda a: heuristic(graph, a, goal))
 
         # fill color current vertex to yellow
         fill_vertex(graph, current, yellow)
