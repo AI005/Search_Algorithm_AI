@@ -11,7 +11,7 @@ Feel free print graph, edges to console to get more understand input.
 Do not change input parameters
 Create new function/file if necessary
 """
-time_delay = 700
+time_delay = 100
 
 def fill_edge(v_from, v_to, edges, edge_id, color):
     edges[edge_id(v_from, v_to)][1] = color
@@ -102,7 +102,6 @@ def redorder_list(l):
 
 
 def DFS(graph, edges, edge_id, start, goal):
-
     n = len(graph)  # number of vertex
     path = [start]
     stack = deque()
@@ -171,13 +170,19 @@ def DFS(graph, edges, edge_id, start, goal):
     fill_Path(path, edges, edge_id, orange)
     graphUI.updateUI()
 
-
+def getTableCost(graph):
+    result = []
+    for a in graph:
+        for nei in a[1]:
+            print(graph.index(a), nei, cost(graph, graph.index(a), nei))
+    
+    
 def UCS(graph, edges, edge_id, start, goal):
     q = PriorityQueue()
     explored = set()
     q.put((0, [start]))
     result = []
-
+    getTableCost(graph)
     # fill color started vertex to orange
     fill_vertex(graph, start, orange)
     # fill color goal vertex to purple
@@ -195,7 +200,8 @@ def UCS(graph, edges, edge_id, start, goal):
         fill_vertex(graph, current, yellow)
 
         fill_Path(node[1], edges, edge_id, white)
-
+        print(explored)
+        print(q_temp)
         if current == goal:
             fill_vertex(graph, current, blue)
             result = node[1]
@@ -207,13 +213,12 @@ def UCS(graph, edges, edge_id, start, goal):
         for neighbor in neighbors:
             if neighbor not in explored:
                 q.put((_cost + cost(graph, current, neighbor), node[1] + [neighbor]))
-
                 # set color node will be visited and edge among us
                 fill_vertex(graph, neighbor, red)
                 fill_edge(current, neighbor, edges, edge_id, green)
-
+        q_temp.sort()
         graphUI.updateUI()
-        pygame.time.delay(1000)
+        pygame.time.delay(time_delay)
         #set color visted vertex to blue
         fill_vertex(graph, current, blue)
 
@@ -293,7 +298,8 @@ def AStar(graph, edges, edge_id, start, goal):
 
         for v in closedset:
             fill_vertex(graph, v, blue)
-
+ 
+ 
     path = []
     at = goal
     while at != -1:
@@ -394,20 +400,22 @@ def example_func(graph, edges, edge_id, start, goal):
     @param start: int - start vertices/node
     @param goal: int - vertices/node to search
     @return:
-    """
+    
 
-    # Ex1: Set all edge from Node 1 to Adjacency node of Node 1 is green edges.
+    Ex1: Set all edge from Node 1 to Adjacency node of Node 1 is green edges.
     node_1 = graph[1]
     for adjacency_node in node_1[1]:
         edges[edge_id(1, adjacency_node)][1] = green
     graphUI.updateUI()
 
-    # Ex2: Set color of Node 2 is Red
+    Ex2: Set color of Node 2 is Red
     graph[2][3] = red
     graphUI.updateUI()
 
-    # Ex3: Set all edge between node in a array.
+    Ex3: Set all edge between node in a array.
     path = [4, 7, 9]  # -> set edge from 4-7, 7-9 is blue
     for i in range(len(path) - 1):
         edges[edge_id(path[i], path[i + 1])][1] = blue
     graphUI.updateUI()
+    pass"""
+    pass
