@@ -13,7 +13,7 @@ Argument from command line. To run:
 
 `python main.py input_file search_algorithm`
 
-*search_algorithm* must be one of ['bfs', 'dfs', 'ucs', 'a_star',...]
+*search_algorithm* must be one of ['bfs', 'dfs', 'ucs', 'a_star', 'befs', ...]
 
 For example:
 	`python main.py input.txt bfs`

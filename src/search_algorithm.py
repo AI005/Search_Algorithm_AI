@@ -11,7 +11,7 @@ Feel free print graph, edges to console to get more understand input.
 Do not change input parameters
 Create new function/file if necessary
 """
-time_delay = 100
+time_delay = 700
 
 def fill_edge(v_from, v_to, edges, edge_id, color):
     edges[edge_id(v_from, v_to)][1] = color
@@ -24,6 +24,11 @@ def fill_Path(path, edges, edge_id, color):
     for i in range(len(path) - 1):
         edges[edge_id(path[i], path[i + 1])][1] = color
 
+def notify_no_find_path():
+    try:
+        raise Exception("No find path")
+    except Exception as error:
+        print(error)
 
 def BFS(graph, edges, edge_id, start, goal):
 
@@ -33,7 +38,6 @@ def BFS(graph, edges, edge_id, start, goal):
     queue = deque()
 
     queue.append(start)
-    
     visited[start] = True
 
     # fill color started vertex to orange
@@ -76,7 +80,6 @@ def BFS(graph, edges, edge_id, start, goal):
 
                 # set color node will be visited and edge among us
                 fill_vertex(graph, neighbor, red)
-                fill_edge(current, neighbor, edges, edge_id, green)
 
         graphUI.updateUI()
         pygame.time.delay(time_delay)
@@ -85,6 +88,9 @@ def BFS(graph, edges, edge_id, start, goal):
         fill_vertex(graph, current, blue)
 
     # --- reconstructor path ---
+    if prev[goal] == -1:
+        notify_no_find_path()
+        
     path = []
     at = goal
     while at != -1:
@@ -93,10 +99,10 @@ def BFS(graph, edges, edge_id, start, goal):
 
 
     # Fill color path
-    fill_Path(path, edges, edge_id, orange)
+    fill_Path(path, edges, edge_id, green)
     graphUI.updateUI()
 
-
+# Create a new list which random index from a list
 def redorder_list(l): 
     return random.sample(l, len(l))
 
@@ -122,15 +128,13 @@ def DFS(graph, edges, edge_id, start, goal):
     while len(stack) != 0:
         current = stack[-1]
 
-
         # fill color current vertex to yellow
         fill_vertex(graph, current, yellow)
 
         #fill color explored edge to white
-        if len(path) >= 1 and path[-1] != current:
-            fill_edge(current, path[-1], edges, edge_id, white)
+        if len(path) >= 1 and current != path[-1]:
+                fill_edge(current, path[-1], edges, edge_id, white)
        
-
         if not(visited[current]):
             path.append(current)
             visited[current] = True
@@ -147,14 +151,15 @@ def DFS(graph, edges, edge_id, start, goal):
 
                 # set color node will be visited and edge among us
                 fill_vertex(graph, next, red)
-                fill_edge(current, next, edges, edge_id, green)
+                fill_edge(current, next, edges, edge_id, orange)
                 flag = True
                 break
 
         if not(flag):   
             last = path.pop()
             # set color to default if dead end
-            fill_edge(path[-1], last, edges, edge_id, grey)
+            if len(path) >= 1:
+                fill_edge(path[-1], last, edges, edge_id, grey)
             fill_vertex(graph, current, black)
 
             stack.pop()
@@ -166,67 +171,83 @@ def DFS(graph, edges, edge_id, start, goal):
         if flag:
             fill_vertex(graph, current, blue)
 
+
+    if len(path) == 0:
+        notify_no_find_path()
+    
     # Fill color path
-    fill_Path(path, edges, edge_id, orange)
+    fill_Path(path, edges, edge_id, green)
     graphUI.updateUI()
 
-def getTableCost(graph):
-    result = []
-    for a in graph:
-        for nei in a[1]:
-            print(graph.index(a), nei, cost(graph, graph.index(a), nei))
-    
     
 def UCS(graph, edges, edge_id, start, goal):
-    q = PriorityQueue()
-    explored = set()
-    q.put((0, [start]))
-    result = []
-    getTableCost(graph)
-    # fill color started vertex to orange
+    
+    frontier = [start]
+    parent = [-1 for _ in range(len(graph))]
+    explored  = set()
+    G = [-1 for _ in range(len(graph))]
+    G[start] = 0
+    
+     # fill color started vertex to orange
     fill_vertex(graph, start, orange)
     # fill color goal vertex to purple
     fill_vertex(graph, goal, purple)  
     graphUI.updateUI()
     pygame.time.delay(time_delay)
-
-
-    while not q.empty():
-        node = q.get()
-        current = node[1][-1]
-        _cost = node[0]
+    
+    while len(frontier) != 0:
+        
+        # set current  = vertex x from frontier which G[x] is min
+        current = min(frontier, key=lambda a: G[a])
+        _cost = G[current]
         
         # fill color current vertex to yellow
         fill_vertex(graph, current, yellow)
-
-        fill_Path(node[1], edges, edge_id, white)
-        print(explored)
-        print(q_temp)
+        #fill color explored edge to white
+        if parent[current] != -1: 
+            fill_edge(current, parent[current], edges, edge_id, white)
+            
         if current == goal:
             fill_vertex(graph, current, blue)
-            result = node[1]
+            graphUI.updateUI()
             break
-
+        
+        frontier.remove(current)
         explored.add(current)
         neighbors = graph[current][1]
-
+        
         for neighbor in neighbors:
             if neighbor not in explored:
-                q.put((_cost + cost(graph, current, neighbor), node[1] + [neighbor]))
-                # set color node will be visited and edge among us
-                fill_vertex(graph, neighbor, red)
-                fill_edge(current, neighbor, edges, edge_id, green)
-        q_temp.sort()
-        graphUI.updateUI()
+                if neighbor not in frontier:
+                    fill_edge(current, neighbor,edges, edge_id, orange)
+                    fill_vertex(graph, neighbor, red)
+                    frontier.append(neighbor)
+                    G[neighbor] = _cost + cost(graph,current, neighbor)
+                    parent[neighbor] = current
+                else:
+                    if G[neighbor] > G[current] + cost(graph,current, neighbor):
+                        G[neighbor] = _cost + cost(graph,current, neighbor)
+                        parent[neighbor] = current
+        
+        
         pygame.time.delay(time_delay)
-        #set color visted vertex to blue
+        graphUI.updateUI()
         fill_vertex(graph, current, blue)
-
-    print(result)
-    fill_Path(result, edges, edge_id, orange)
+    
+    if parent[goal] == -1:
+        notify_no_find_path()   
+    
+    path = []
+    at = goal
+    while at != -1:
+        path.append(at)
+        at = parent[at]
+    
+    fill_Path(path, edges, edge_id, green)
     graphUI.updateUI()
-
-
+    print(path)
+    
+# heuristic calculate distance of two vertexs
 def heuristic(graph, v_from, v_to):
     x1, y1 = graph[v_from][0]
     x2, y2 = graph[v_to][0]
@@ -243,6 +264,7 @@ def cost(graph, v_from, v_to):
         print(error)
 
 def AStar(graph, edges, edge_id, start, goal):
+    
     openset = set()
     closedset = set()
     current = start
@@ -282,7 +304,7 @@ def AStar(graph, edges, edge_id, start, goal):
             
             # set color node will be visited and edge among us
             fill_vertex(graph, neighbor, red)
-            fill_edge(current, neighbor, edges, edge_id, green)
+            fill_edge(current, neighbor, edges, edge_id, orange)
 
             if neighbor in openset:
                 new_g = G[current] + cost(graph, current, neighbor)
@@ -298,8 +320,10 @@ def AStar(graph, edges, edge_id, start, goal):
 
         for v in closedset:
             fill_vertex(graph, v, blue)
- 
- 
+
+    if parent[goal] == -1:
+        notify_no_find_path()
+        
     path = []
     at = goal
     while at != -1:
@@ -308,7 +332,7 @@ def AStar(graph, edges, edge_id, start, goal):
 
 
     # Fill color path
-    fill_Path(path, edges, edge_id, orange)
+    fill_Path(path, edges, edge_id, green)
     graphUI.updateUI()
         
 
@@ -328,6 +352,7 @@ def BeFS(graph, edges, edge_id, start, goal):
     pygame.time.delay(time_delay)
 
     while len(openset) != 0:
+        
         current = min(openset, key = lambda a: heuristic(graph, a, goal))
 
         # fill color current vertex to yellow
@@ -351,7 +376,7 @@ def BeFS(graph, edges, edge_id, start, goal):
 
             # set color node will be visited and edge among us
             fill_vertex(graph, neighbor, red)
-            fill_edge(current, neighbor, edges, edge_id, green)
+            fill_edge(current, neighbor, edges, edge_id, orange)
             openset.add(neighbor)
             parent[neighbor] = current
 
@@ -360,7 +385,11 @@ def BeFS(graph, edges, edge_id, start, goal):
 
         for v in closedset:
             fill_vertex(graph, v, blue)   
-
+            
+    if parent[goal] == -1:
+        notify_no_find_path()
+    
+    # find path    
     path = []
     at = goal
     while at != -1:
@@ -369,53 +398,9 @@ def BeFS(graph, edges, edge_id, start, goal):
 
 
     # Fill color path
-    fill_Path(path, edges, edge_id, orange)
+    fill_Path(path, edges, edge_id, green)
     graphUI.updateUI()
 
 
-def example_func(graph, edges, edge_id, start, goal):
-    """
-    This function is just show some basic feature that you can use your project.
-    @param graph: list - contain information of graph (same value as global_graph)
-                    list of object:
-                     [0] : (x,y) coordinate in UI
-                     [1] : adjacent node indexes
-                     [2] : node edge color
-                     [3] : node fill color
-                Ex: graph = [
-                                [
-                                    (139, 140),             # position of node when draw on UI
-                                    [1, 2],                 # list of adjacent node
-                                    (100, 100, 100),        # grey - node edged color
-                                    (0, 0, 0)               # black - node fill color
-                                ],
-                                [(312, 224), [0, 4, 2, 3], (100, 100, 100), (0, 0, 0)],
-                                ...
-                            ]
-                It means this graph has Node 0 links to Node 1 and Node 2.
-                Node 1 links to Node 0,2,3 and 4.
-    @param edges: dict - dictionary of edge_id: [(n1,n2), color]. Ex: edges[edge_id(0,1)] = [(0,1), (0,0,0)] : set color
-                    of edge from Node 0 to Node 1 is black.
-    @param edge_id: id of each edge between two nodes. Ex: edge_id(0, 1) : id edge of two Node 0 and Node 1
-    @param start: int - start vertices/node
-    @param goal: int - vertices/node to search
-    @return:
-    
-
-    Ex1: Set all edge from Node 1 to Adjacency node of Node 1 is green edges.
-    node_1 = graph[1]
-    for adjacency_node in node_1[1]:
-        edges[edge_id(1, adjacency_node)][1] = green
-    graphUI.updateUI()
-
-    Ex2: Set color of Node 2 is Red
-    graph[2][3] = red
-    graphUI.updateUI()
-
-    Ex3: Set all edge between node in a array.
-    path = [4, 7, 9]  # -> set edge from 4-7, 7-9 is blue
-    for i in range(len(path) - 1):
-        edges[edge_id(path[i], path[i + 1])][1] = blue
-    graphUI.updateUI()
-    pass"""
+def example_func(graph, edges, edge_id, start, goal):       
     pass
